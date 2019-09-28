@@ -1,15 +1,19 @@
-import collections
-import re
+
 import urllib.request
 from bs4 import BeautifulSoup
-from requests import request
+
 import matplotlib.pyplot as plt
 from collections import Counter
 
 def get_soup(url):
-    response = urllib.request.urlopen(url)
-    soup = BeautifulSoup(response.read(), 'lxml')
-    return soup
+    try:
+        response = urllib.request.urlopen(url)
+        soup = BeautifulSoup(response.read(), 'lxml')
+        return soup
+    except:
+        return None
+   
+    
 
 def all_links(soup):
     foundUrls = [link["href"]  for link in soup.find_all("a", href=lambda href: href and not href.startswith("#"))]
@@ -45,26 +49,39 @@ def draw_plot(values, lbx='xplot', lby='yplot'):
     plt.xticks(range(len(values)), list(values.keys()))
     plt.show()
 
+all_l = 0
+all_s =0
+all_w = Counter()
+all_leng = Counter()
+    
+def dypth_url(url, dypth):
+    global all_l
+    global all_s
+    global all_w
+    global all_leng
+    if dypth == -1:
+        return None
+    else:   
+        soup_l = get_soup(url)
+        dypth -=1
+        if soup_l is not None :
+            print('count links =', len(all_links(soup_l)))
+            all_l = all_l + len(all_links(soup_l))
+            print('count symbols on page = ', len(get_text(soup_l)))
+            all_s = all_s + len(get_text(soup_l))
+            all_w = all_w + get_all_words(soup_l)
+            all_leng = all_leng + get_length_wordt(soup_l)
+            for li in all_links(soup_l):
+                dypth_url(li, dypth)
+            
+    
+    
+    
+      
 def main():
+
     url = 'http://unrealinteractive.com/'
-    print('count links =', len(all_links(get_soup(url))))
-    all_l = len(all_links(get_soup(url)))
-    print('count symbols on page = ', len(get_text(get_soup(url))))
-    all_s = len(get_text(get_soup(url)))
-    #plt.figure(figsize=(40,10))
-    #plt.bar(get_all_words(get_soup(url)).keys(), get_all_words(get_soup(url)).values())
-    all_w = get_all_words(get_soup(url))
-    #plt.figure(figsize=(40,10))
-    #plt.bar(get_length_wordt((get_soup(url))).values(), get_length_wordt((get_soup(url))).keys())
-    all_leng = get_length_wordt((get_soup(url)))
-    for number in range(5):
-        l = all_links(get_soup(url))[number]
-        print('count links =', len(all_links(get_soup(l))))
-        all_l = all_l + len(all_links(get_soup(l)))
-        print('count symbols on page = ', len(get_text(get_soup(l))))
-        all_s = all_s + len(get_text(get_soup(l)))
-        all_w = all_w + get_all_words(get_soup(l))
-        all_leng = all_leng + get_length_wordt((get_soup(l)))
+    dypth_url(url, 0)
     plt.figure(figsize=(40,10))
     plt.bar(all_w.keys(), all_w.values())
     plt.figure(figsize=(40,10))
