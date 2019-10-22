@@ -1,0 +1,102 @@
+import requests
+from collections import Counter
+from datetime import datetime, date
+from sklearn.cluster import KMeans
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.cluster import AgglomerativeClustering
+import scipy.cluster.hierarchy as shc
+import googlemaps
+
+friends_ALL = []
+age = [];
+city = []
+status = []
+photos = []
+videos = []
+notes = []
+groups = []
+t2 = list()
+t3 = list()
+dist = []
+
+API_KEY = 'AIzaSyDjniq4AottS8sfLHl40u00BzitPN5900Y'
+gmaps = googlemaps.Client(key=API_KEY)
+
+def calculateAge(birthDate): 
+    today = date.today()
+    age = today.year - birthDate.year - ((today.month, today.day) < (birthDate.month, birthDate.day)) 
+    return age
+
+def deep_getfriend(user_id, deep):
+    if deep == 0:
+        return None
+    else:
+        deep -=1
+        access_token = '6ce4e1e6eff341f896404821f13dd6537fb44342d11967679739f5c3148f6a534a039cd0930b4256b5cf1'
+        api_version = '5.52'
+        res_users = requests.get(f'https://api.vk.com/method/friends.get?user_id={user_id}&access_token={access_token}&v={api_version}')
+        try:
+            friends = (res_users.json())["response"].get('items')
+            global friends_ALL
+            friends_ALL +=friends    
+            for friend in friends:
+                info(friend)
+                deep_getfriend(friend,deep)
+        except: ()
+
+def info(id):
+        access_token = '6ce4e1e6eff341f896404821f13dd6537fb44342d11967679739f5c3148f6a534a039cd0930b4256b5cf1'
+        api_version = '5.52'
+        res_users = requests.get(f'https://api.vk.com/method/users.get?user_ids={id}&fields=bdate , city,status,counters&access_token={access_token}&v={api_version}')
+        try:
+            info = (res_users.json())["response"][0]
+        except: return 0
+        global age
+        try:
+            b_date = datetime.strptime(info.get('bdate'), '%d.%m.%Y')
+            age.append(calculateAge(b_date))
+        except : ()
+        try:
+            a = info.get('city').get('title')
+            city.append(a)
+            dist = gmaps.distance_matrix('Minsk', a)['rows'][0]['elements'][0]
+        except : ()
+        
+        try:
+            status.append(info.get('status'))
+        except : ()
+        try:
+            photos.append(info.get('counters').get('photos'))
+        except : ()
+        try:
+            videos.append(info.get('counters').get('videos'))
+        except : ()
+        try:
+            notes.append(info.get('counters').get('notes'))
+        except : ()
+        try:
+            groups.append(info.get('counters').get('groups'))
+        except : ()
+        try:
+            t2.append([dist['distance']['value'], info.get('counters').get('videos')])
+            t3.append([calculateAge(b_date),info.get('counters').get('photos'), dist['distance']['value']])
+        except : ()
+        
+
+def main():  
+    deep_getfriend(130585080,1)
+    X = np.array(t2)
+    cluster2 = AgglomerativeClustering(n_clusters=2, affinity='euclidean', linkage='ward')
+    cluster2.fit_predict(X)
+    plt.scatter(X[:, 0], X[:, 1], c=cluster2.labels_, cmap='rainbow')
+    plt.show()
+    
+    X = np.array(t3)
+    plt.figure(figsize=(10, 7))
+    plt.title("Friends dendrograms")
+    shc.dendrogram(shc.linkage(X, method='ward'))
+    plt.show()
+
+if __name__ == '__main__':
+	main()

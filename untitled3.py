@@ -24,7 +24,7 @@ def deep_getfriend(user_id, deep):
         return None
     else:
         deep -=1
-        access_token = '98dc54f1b98576ea11a6b51b264c544f7809004e9b3cef316ec50f0b200d207b82e453ca6e13f0aeb36f2'
+        access_token = '6ce4e1e6eff341f896404821f13dd6537fb44342d11967679739f5c3148f6a534a039cd0930b4256b5cf1'
         api_version = '5.52'
         res_users = requests.get(f'https://api.vk.com/method/friends.get?user_id={user_id}&access_token={access_token}&v={api_version}')
         try:
@@ -37,7 +37,7 @@ def deep_getfriend(user_id, deep):
         except: ()
 
 def info(id):
-        access_token = '98dc54f1b98576ea11a6b51b264c544f7809004e9b3cef316ec50f0b200d207b82e453ca6e13f0aeb36f2'
+        access_token = '6ce4e1e6eff341f896404821f13dd6537fb44342d11967679739f5c3148f6a534a039cd0930b4256b5cf1'
         api_version = '5.52'
         res_users = requests.get(f'https://api.vk.com/method/users.get?user_ids={id}&fields=bdate , city,status,counters&access_token={access_token}&v={api_version}')
         try:
@@ -72,7 +72,8 @@ def info(id):
 
 def main():  
     deep_getfriend(130585080,1)
-    X = np.array(list(Counter(age).items()))
+    print(Counter(videos))
+    X = np.array(list(Counter(videos).items()))
     km = KMeans(n_clusters=3, init='random',n_init=10, max_iter=300, tol=1e-04, random_state=0)
     y_km = km.fit_predict(X)
     plt.scatter(X[y_km == 0, 0], X[y_km == 0, 1],s=50, c='lightgreen',marker='s', edgecolor='black',label='cluster 1')
@@ -81,6 +82,41 @@ def main():
 
     plt.scatter(X[y_km == 2, 0], X[y_km == 2, 1],s=50, c='lightblue',marker='v', edgecolor='black',label='cluster 3')
 
+# plot the centroids
+    plt.scatter(km.cluster_centers_[:, 0], km.cluster_centers_[:, 1],s=250, marker='*',c='red', edgecolor='black',label='centroids')
+    plt.legend(scatterpoints=1)
+    plt.grid()
+    plt.show()
+    
+    km = KMeans(n_clusters=5, init='random',n_init=10, max_iter=300, tol=1e-04, random_state=0)
+    y_km = km.fit_predict(X)
+    y_km = km.fit_predict(X)
+    plt.scatter(X[y_km == 0, 0], X[y_km == 0, 1],s=50, c='lightgreen',marker='s', edgecolor='black',label='cluster 1')
+
+    plt.scatter(X[y_km == 1, 0], X[y_km == 1, 1],s=50, c='orange',marker='o', edgecolor='black',label='cluster 2')
+
+    plt.scatter(X[y_km == 2, 0], X[y_km == 2, 1],s=50, c='lightblue',marker='v', edgecolor='black',label='cluster 3')
+    plt.scatter(X[y_km == 2, 0], X[y_km == 2, 1],s=50, c='green',marker='.', edgecolor='black',label='cluster 4')
+    plt.scatter(X[y_km == 2, 0], X[y_km == 2, 1],s=50, c='yellow',marker=',', edgecolor='black',label='cluster 5')
+
+# plot the centroids
+    plt.scatter(km.cluster_centers_[:, 0], km.cluster_centers_[:, 1],s=250, marker='*',c='red', edgecolor='black',label='centroids')
+    plt.legend(scatterpoints=1)
+    plt.grid()
+    plt.show()
+    
+    km = KMeans(n_clusters=7, init='random',n_init=10, max_iter=300, tol=1e-04, random_state=0)
+    y_km = km.fit_predict(X)
+    plt.scatter(X[y_km == 0, 0], X[y_km == 0, 1],s=50, c='lightgreen',marker='s', edgecolor='black',label='cluster 1')
+
+    plt.scatter(X[y_km == 1, 0], X[y_km == 1, 1],s=50, c='orange',marker='o', edgecolor='black',label='cluster 2')
+
+    plt.scatter(X[y_km == 2, 0], X[y_km == 2, 1],s=50, c='lightblue',marker='v', edgecolor='black',label='cluster 3')
+
+    plt.scatter(X[y_km == 2, 0], X[y_km == 2, 1],s=50, c='green',marker='.', edgecolor='black',label='cluster 4')
+    plt.scatter(X[y_km == 2, 0], X[y_km == 2, 1],s=50, c='blue',marker=',', edgecolor='black',label='cluster 5')
+    plt.scatter(X[y_km == 2, 0], X[y_km == 2, 1],s=50, c='pink',marker='>', edgecolor='black',label='cluster 6')
+    plt.scatter(X[y_km == 2, 0], X[y_km == 2, 1],s=50, c='black',marker='<', edgecolor='black',label='cluster 7')
 # plot the centroids
     plt.scatter(km.cluster_centers_[:, 0], km.cluster_centers_[:, 1],s=250, marker='*',c='red', edgecolor='black',label='centroids')
     plt.legend(scatterpoints=1)
