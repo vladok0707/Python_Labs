@@ -1,0 +1,162 @@
+import requests
+from collections import Counter
+from datetime import datetime, date
+from sklearn.cluster import KMeans
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.cluster import AgglomerativeClustering
+import scipy.cluster.hierarchy as shc
+import googlemaps
+import pandas as pd
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from scipy import stats
+from pandas import DataFrame
+import seaborn as seabornInstance 
+
+from sklearn import metrics
+from mpl_toolkits.mplot3d import Axes3D
+
+friends_ALL = []
+age = [];
+city = []
+status = []
+photos = []
+videos = []
+notes = []
+groups = []
+t2 = list()
+t3 = list()
+dist = []
+
+API_KEY = 'AIzaSyDjniq4AottS8sfLHl40u00BzitPN5900Y'
+gmaps = googlemaps.Client(key=API_KEY)
+
+def calculateAge(birthDate): 
+    today = date.today()
+    age = today.year - birthDate.year - ((today.month, today.day) < (birthDate.month, birthDate.day)) 
+    return age
+
+def deep_getfriend(user_id, deep):
+    if deep == 0 or len(age) >= 50:
+        return None
+    else:
+        deep -=1
+        access_token = '372297060f41117e02c77fb53cffcd4b61ec129019627d69149a0f039b52345f66cf6d160ec608d9bc45e'
+        api_version = '5.52'
+        res_users = requests.get(f'https://api.vk.com/method/friends.get?user_id={user_id}&access_token={access_token}&v={api_version}')
+        try: 
+            friends = (res_users.json())["response"].get('items')
+            global friends_ALL
+            friends_ALL +=friends    
+            for friend in friends:
+                info(friend)
+                deep_getfriend(friend,deep)
+        except: ()
+
+def info(id):
+        global age
+        print(len(age))
+        if len(age) >= 50:
+            return None
+        access_token = '372297060f41117e02c77fb53cffcd4b61ec129019627d69149a0f039b52345f66cf6d160ec608d9bc45e'
+        api_version = '5.52'
+        res_users = requests.get(f'https://api.vk.com/method/users.get?user_ids={id}&fields=bdate , city,status,counters&access_token={access_token}&v={api_version}')
+        try:
+            info = (res_users.json())["response"][0]
+        except: return 0
+        try:
+            q = info.get('bdate')
+            w = info.get('counters').get('photos')
+            e = info.get('counters').get('videos')
+            if (q!= None and w!= None and e!= None):
+                b_date = datetime.strptime(q, '%d.%m.%Y')
+                age.append(calculateAge(b_date))
+                photos.append(w)
+                videos.append(e)
+        except : ()
+        
+        
+def get_linear_regression1():
+    
+    x = np.array(age)
+    print(x)
+    y = np.array(photos)
+    print(y)
+    inp = np.array(x).reshape(-1, 1)
+    out = np.array(y).reshape(-1, 1)
+    x_train, x_test, y_train, y_test = train_test_split(inp, out, test_size=0.33, random_state=0)
+    model = LinearRegression().fit(x_train, y_train)
+    y_pred = model.predict(x_test)
+
+    plt.scatter(x_train, y_train, edgecolor='k')
+    #plt.scatter(inp, out, edgecolor='w')
+    plt.scatter(x_test, y_pred, edgecolor='b')
+    plt.plot(x_test, y_pred)
+    plt.show()
+    print(model.coef_)
+    df = pd.DataFrame({'Actual': y_test.flatten(), 'Predicted': y_pred.flatten()})
+    print(df)
+    
+def get_linear_regression2():
+    dataset = {'Videos': videos, 'Photos': photos, 'Age':age}
+    df = DataFrame(dataset,columns=['Videos','Photos','Age']) 
+
+    x_plot = df['Videos']
+    y_plot = df['Photos']
+    z_plot = df['Age']
+    angle = 10 # Change this to change the viewing angle to the graph
+
+    # 3D plot 
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.set_xlabel('Videos')
+    ax.set_ylabel('Photos')
+    ax.set_zlabel('Age')
+    ax.title.set_text('MEDV against RM,LSTAT and DIS')
+    img = ax.scatter(x_plot,y_plot, z_plot,  cmap=plt.hot())
+    ax.view_init(30, angle)
+    plt.show()
+    
+    X = df[['Videos','Photos']].values # Feature Vector
+    y = df['Age'].values # Target Vector
+
+# Splitting data into test and train sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+
+    reg = LinearRegression()  
+    reg.fit(X_train, y_train) # Training the model
+    y_pred =reg.predict(X_test)
+    
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.title.set_text('Model curve against test data')
+    img = ax.scatter(X_test.T[0],X_test.T[1], y_test, cmap=plt.hot())
+    ax.scatter(X_test.T[0],X_test.T[1],y_pred, c='green')
+    ax.view_init(30, angle)
+    plt.show()
+
+    # Against Train Data
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.title.set_text('Model curve against training data')
+    img = ax.scatter(x_plot,y_plot, z_plot,  cmap=plt.hot())
+    ax.scatter(X_test.T[0],X_test.T[1],y_pred, c='red')
+    ax.view_init(30, angle)
+    ax.plot([X_test.T[0].min(), X_test.T[0].max()],[X_test.T[1].min(), X_test.T[1].max()], [y_test.min(), y_test.max()], 'k--', lw=4)
+    plt.show()
+    
+    # Results
+    predictions = pd.DataFrame({'Actual': y_test.flatten(), 'Predicted': y_pred.flatten()})
+    print(predictions)
+    
+    print('Variance Score:', metrics.explained_variance_score(y_test, y_pred))
+
+    
+def main():  
+    deep_getfriend(130585080,2)
+    get_linear_regression1()
+    get_linear_regression2()
+if __name__ == '__main__':
+	main()
+    
